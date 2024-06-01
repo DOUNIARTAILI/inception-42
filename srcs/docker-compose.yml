@@ -1,0 +1,59 @@
+services:
+  my-db:
+    container_name: my-db
+    build: ./requirements/mariadb
+    image: my-db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - inception
+  
+  my-wordpress:
+    container_name: my-wordpress
+    build: ./requirements/wordpress
+    image: my-wordpress
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - vol:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      - my-db
+
+  my-nginx:
+    container_name: my-nginx
+    build: ./requirements/nginx
+    image: my-nginx
+    ports:
+      - 443:443
+    networks:
+      - inception
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - vol:/var/www/html
+    depends_on:
+      - my-wordpress
+
+networks:
+    inception:
+
+volumes:
+  vol:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PATH_WP_VOL}
+      o: bind
+  db:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PATH_DB_VOL}
+      o: bind
